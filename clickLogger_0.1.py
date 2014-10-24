@@ -4,19 +4,8 @@ import logging
 import datetime as dt
 import RPi.GPIO as gpio
 
-# from https://stackoverflow.com/questions/6290739/python-logging-use-milliseconds-in-time-format
-class MyFormatter(logging.Formatter):
-    converter=dt.datetime.fromtimestamp
-    def formatTime(self, record, datefmt=None):
-        ct = self.converter(record.created)
-        if datefmt:
-            s = ct.strftime(datefmt)
-        else:
-            t = ct.strftime("%Y-%m-%d %H:%M:%S")
-            s = "%s,%03d" % (t, record.msecs)
-        return s
 
-logging.basicConfig(filename="logs/clicks2.log", format = MyFormatter, level=logging.INFO)
+logging.basicConfig(filename="logs/clicks2.log", format='%(asctime)s %(message)s', datefmt="%Y-%m-%d %H:%M:%S", level=logging.INFO)
 
 gpio.VERSION
 gpio.setmode(gpio.BOARD)
@@ -31,14 +20,27 @@ avgTime = 0
 elapseSum = 0
 
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
-console = logging.StreamHandler()
-logger.addHandler(console)
+# from https://stackoverflow.com/questions/6290739/python-logging-use-milliseconds-in-time-format
+class MyFormatter(logging.Formatter):
+    converter=dt.datetime.fromtimestamp
+    def formatTime(self, record, datefmt=None):
+        ct = self.converter(record.created)
+        if datefmt:
+            s = ct.strftime(datefmt)
+        else:
+            t = ct.strftime("%Y-%m-%d %H:%M:%S")
+            s = "%s,%03d" % (t, record.msecs)
+        return s
 
-formatter = MyFormatter(fmt='%(asctime)s %(message)s',datefmt='%Y-%m-%d,%H:%M:%S.%f')
-console.setFormatter(formatter)
+#logger = logging.getLogger(__name__)
+#logger.setLevel(logging.INFO)
+
+#console = logging.StreamHandler()
+#logger.addHandler(console)
+
+#formatter = MyFormatter(fmt='%(asctime)s %(message)s',datefmt='%Y-%m-%d,%H:%M:%S.%f')
+#console.setFormatter(formatter)
 
 #logger.debug('Jackdaws love my big sphinx of quartz.')
 
