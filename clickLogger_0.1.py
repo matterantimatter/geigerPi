@@ -36,13 +36,11 @@ class MyFormatter(logging.Formatter):
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-#console = logging.StreamHandler()
-#logger.addHandler(console)
+console = logging.StreamHandler()
+logger.addHandler(console)
 
-#formatter = MyFormatter(fmt='%(asctime)s %(message)s',datefmt='%Y-%m-%d,%H:%M:%S.%f')
-#console.setFormatter(formatter)
-
-#logger.debug('Jackdaws love my big sphinx of quartz.')
+formatter = MyFormatter(fmt='%(asctime)s %(message)s',datefmt='%Y-%m-%d,%H:%M:%S.%f')
+console.setFormatter(formatter)
 
 while (1):
 	clickState = gpio.input(7)
