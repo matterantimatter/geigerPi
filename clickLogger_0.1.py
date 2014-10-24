@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import time
 import logging
+import datetime as dt
 import RPi.GPIO as gpio
 
 logging.basicConfig(filename="logs/clicks2.log", level=logging.info)
@@ -16,6 +17,29 @@ maxTime=0
 minTime = 1
 avgTime = 0
 elapseSum = 0
+
+# from https://stackoverflow.com/questions/6290739/python-logging-use-milliseconds-in-time-format
+class MyFormatter(logging.Formatter):
+    converter=dt.datetime.fromtimestamp
+    def formatTime(self, record, datefmt=None):
+        ct = self.converter(record.created)
+        if datefmt:
+            s = ct.strftime(datefmt)
+        else:
+            t = ct.strftime("%Y-%m-%d %H:%M:%S")
+            s = "%s,%03d" % (t, record.msecs)
+        return s
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+console = logging.StreamHandler()
+logger.addHandler(console)
+
+formatter = MyFormatter(fmt='%(asctime)s %(message)s',datefmt='%Y-%m-%d,%H:%M:%S.%f')
+console.setFormatter(formatter)
+
+#logger.debug('Jackdaws love my big sphinx of quartz.')
 
 while (1):
 	clickState = gpio.input(7)
@@ -35,4 +59,5 @@ while (1):
 		elapseSum += timeElapsed
 
 		#print( "{} - Click detected".format( time.asctime() ))
-		print( "click detected: ",clickTime, timeElapsed, minTime, maxTime, avgTime, clickTotal)
+		#print( "click detected: ",clickTime, timeElapsed, minTime, maxTime, avgTime, clickTotal)
+		logger.info('click detected')
