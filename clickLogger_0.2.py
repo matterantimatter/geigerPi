@@ -54,3 +54,5 @@ while (1):
 		#print( "click detected: ",clickTime, timeElapsed, minTime, maxTime, avgTime, clickTotal)
 		#logger.info('click detected')
 		clickLogger.info("click_detected")
+		fh.info("click")
+		ch.info("click")
