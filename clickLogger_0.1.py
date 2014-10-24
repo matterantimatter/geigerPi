@@ -3,7 +3,7 @@ import time
 import logging
 import RPi.GPIO as gpio
 
-logging.basicConfig(filename="logs/clicks.log", level=logging.info)
+logging.basicConfig(filename="logs/clicks2.log", level=logging.info)
 
 gpio.VERSION
 gpio.setmode(gpio.BOARD)
