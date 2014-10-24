@@ -4,7 +4,7 @@ import logging
 import datetime as dt
 import RPi.GPIO as gpio
 
-logging.basicConfig(filename="logs/clicks2.log", level=logging.INFO)
+logging.basicConfig(filename="logs/clicks2.log", format = MyFormatter, level=logging.INFO)
 
 gpio.VERSION
 gpio.setmode(gpio.BOARD)
