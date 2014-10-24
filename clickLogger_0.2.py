@@ -14,7 +14,7 @@ fh = logging.FileHandler("logs/clicks.log")
 fh.setLevel(logging.INFO)
 
 ch = logging.StreamHandler();
-ch.setLevel(loggin.INFO)
+ch.setLevel(logging.INFO)
 
 formatter = logging.Formatter('%(asctime)s %(message)s', datefmt='%Y-%m-%d,%H:%M:%S.%f')
 fh.setFormatter(formatter)
