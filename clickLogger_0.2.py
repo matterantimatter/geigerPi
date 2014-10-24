@@ -16,7 +16,8 @@ fh.setLevel(logging.INFO)
 ch = logging.StreamHandler();
 ch.setLevel(logging.INFO)
 
-formatter = logging.Formatter('%(asctime)s %(message)s', datefmt='%Y-%m-%d,%H:%M:%S.%f')
+formatter = logging.Formatter('%(asctime)s.%(msecs)d %(message)s', datefmt='%Y-%m-%d,%H:%M:%S')
+
 fh.setFormatter(formatter)
 ch.setFormatter(formatter)
 
