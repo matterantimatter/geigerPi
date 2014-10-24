@@ -33,8 +33,8 @@ class MyFormatter(logging.Formatter):
             s = "%s,%03d" % (t, record.msecs)
         return s
 
-#logger = logging.getLogger(__name__)
-#logger.setLevel(logging.INFO)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 #console = logging.StreamHandler()
 #logger.addHandler(console)
