@@ -20,6 +20,9 @@ formatter = logging.Formatter('%(asctime)s %(message)s', datefmt='%Y-%m-%d,%H:%M
 fh.setFormatter(formatter)
 ch.setFormatter(formatter)
 
+clickLogger.addHandler(fh)
+clickLogger.addHandler(ch)
+
 gpio.VERSION
 gpio.setmode(gpio.BOARD)
 gpio.setup(7, gpio.IN)
@@ -54,5 +57,3 @@ while (1):
 		#print( "click detected: ",clickTime, timeElapsed, minTime, maxTime, avgTime, clickTotal)
 		#logger.info('click detected')
 		clickLogger.info("click_detected")
-		fh.info("click")
-		ch.info("click")
