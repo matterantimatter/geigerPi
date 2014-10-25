@@ -4,8 +4,9 @@ import logging
 import datetime as dt
 import RPi.GPIO as gpio
 
+# baseline conversion information for Clicks-per-second (CPS) to uSv: https://sites.google.com/site/diygeigercounter/gm-tubes-supported
+# the MightyOhm shipped with a SBM-20 tube
 
-#logging.basicConfig(filename="logs/clicks2.log", format='%(asctime)s %(message)s', datefmt='%Y-%m-%d,%H:%M:%S.%f', level=logging.INFO)
 
 clickLogger = logging.getLogger('click_logger')
 clickLogger.setLevel(logging.INFO)
