@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 import time
 import logging
-import datetime as dt
+import datetime
 import RPi.GPIO as gpio
 
 # baseline conversion information for Clicks-per-second (CPS) to uSv: https://sites.google.com/site/diygeigercounter/gm-tubes-supported
