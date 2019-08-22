@@ -10,6 +10,7 @@ from collections import deque
 import random
 
 ##############################################################################
+#  Based on pyRadMon.  This version contains my changes. - MH, 8/15/19       #
 #  pyRadMon - logger for Geiger counters                                     #
 #  Original Copyright 2013 by station pl_gdn_1                               #
 #  Copyright 2014 by Auseklis Corporation, Richmond, Virginia, U.S.A.        #
@@ -35,7 +36,7 @@ import random
 #  version is a.b.c, change in a or b means new functionality/bugfix,        #
 #  change in c = bugfix                                                      #
 #  do not uncomment line below, it's currently used in HTTP headers          #
-VERSION="0.3.2"
+VERSION="0.3.2.1"
 #  To see your online los, report a bug or request a new feature, please     #
 #  visit http://www.radmon.org and/or https://sourceforge.net/p/pyradmon     #
 ##############################################################################
@@ -410,6 +411,37 @@ class gmc(baseGeigerCommunication):
             print("\r\nProblem in getData procedure (disconnected USB device?):\r\n\t",str(e),"\r\nExiting")
             self.stop()
             sys.exit(1)
+            
+    '''
+    Get stored data from GMC protocol compatible device
+    '''
+    def getHistoryData(self):
+        cpm=-1
+        try:
+            # wait, we want sample every 30s
+            for i in range(0,3):
+                time.sleep(1)
+            
+            # send request
+            response=self.sendCommand("<SPIR[A2][A1][A0][L1][L0]>>")
+            
+            if len(response)==2:
+                # convert bytes to 16 bit int
+                cpm=ord(response[0])*256+ord(response[1])
+            else:
+                print ("Unknown response to CPM request, device is not GMC-compatible?")
+                self.stop()
+                sys.exit(1)
+                
+            utcTime=datetime.datetime.utcnow()
+            data=[cpm, utcTime]
+            return data
+            
+        except Exception as e:
+            print("\r\nProblem in getData procedure (disconnected USB device?):\r\n\t",str(e),"\r\nExiting")
+            self.stop()
+            sys.exit(1)
+            
 
 '''
 For NetIO geiger counter protocol
@@ -490,88 +522,100 @@ class webCommunication():
         # format date and time as required
         dtime=sampleTime.strftime("%Y-%m-%d%%20%H:%M:%S")
 
-        url="GET /radmon.php?user="+self.user+"&password="+self.password+"&function=submit&datetime="+dtime+"&value="+str(sampleCPM)+"&unit=CPM HTTP/1.1"
+        url="GET /radmon.php?user="+self.user+"&password="+self.password \
+        +"&function=submit&datetime="+dtime+"&value="+str(sampleCPM) \
+        +"&unit=CPM HTTP/1.1"
 
         request=url+"\r\nHost: www.radmon.org\r\nUser-Agent: pyRadMon "+VERSION+"\r\n\r\n"
         print("Sending average sample: "+str(sampleCPM)+" CPM")
         #print "\r\n### HTTP Request ###\r\n"+request
 
+#        s.send(str.encode(request))
         s.send(str.encode(request))
+
         data = s.recv(BUFFER_SIZE)
         httpResponse=str(data).splitlines()[0]
-        print ("Server response: ",httpResponse,"\r\n")
+        #print ("Server response: ",httpResponse,"\r\n")
 
-        if "incorrect login" in data.lower():
-            print ("You are using incorrect user/password combination!\r\n")
-            geigerCommunication.stop()
-            sys.exit(1)
-            
+        try:
+         #   print("Data:", type(data), str(data))
+            if "incorrect login" in str(data).lower():
+                print ("You are using incorrect user/password combination!\r\n")
+                geigerCommunication.stop()
+                sys.exit(1)
+          #  print("Closing Socket")
+            s.close()
+           # print("Socket closed")
+
+        except Exception as e:
+            print("Send Sample Exception: ", type(e), str(e))
         #print "\r\n### HTTP Response ###\r\n"+data+"\r\n"
-        s.close
 
 
 ################################################################################
 # Main code
 ################################################################################
 
-# create and read configuration data
-cfg=config()
-cfg.readConfig()
-
-# create geiger communication object
-if cfg.protocol==config.MYGEIGER:
-    print ("Using myGeiger protocol")
-    geigerCommunication=myGeiger(cfg)
-elif cfg.protocol==config.DEMO:
-    print ("Using Demo mode")
-    geigerCommunication=Demo(cfg)
-elif cfg.protocol==config.GMC:
-    print ("Using GMC protocol")
-    geigerCommunication=gmc(cfg)
-elif cfg.protocol==config.NETIO:
-    print ("Using NetIO protocol")
-    geigerCommunication=netio(cfg)
-else:
-    print ("Unknown protocol configured, can't run")
-    sys.exit(1)
-
-# create web server communication object
-webService=webCommunication(cfg)
-
-# main loop is in while loop
-try:
-    # start measuring thread
-    geigerCommunication.start()
-
-    # Now send data to web site every 30 seconds
-    while(geigerCommunication.is_running==1):
-        sample=geigerCommunication.getResult()
-
-        if sample[0]!=-1:
-            # sample is valid, CPM !=-1
-            print ("Average result:\tCPM =",sample[0],"\t",str(sample[1]))
-            try:
-                webService.sendSample(sample)
-            except Exception as e:
-                print ("Error communicating server:\r\n\t", str(e),"\r\n")
-
-            print ("Waiting 30 seconds")
-            # actually waiting 30x1 seconds, it's has better response when CTRL+C is used, maybe will be changed in future
-            for i in range(0,30):
-                time.sleep(1)
-        else:
-            print ("No samples in queue, waiting 5 seconds")
-            for i in range(0,5):
-                time.sleep(1)
-
-    # well, when we will go to this line it looks like geigerCommunication thread stops running
-    # most likely because of serial port problems...
-
-except KeyboardInterrupt as e:
-    print ("\r\nCTRL+C pressed, exiting program\r\n\t", str(e))
+if __name__ == "__main__":
+    # create and read configuration data
+    cfg=config()
+    cfg.readConfig()
+    
+    # create geiger communication object
+    if cfg.protocol==config.MYGEIGER:
+        print ("Using myGeiger protocol")
+        geigerCommunication=myGeiger(cfg)
+    elif cfg.protocol==config.DEMO:
+        print ("Using Demo mode")
+        geigerCommunication=Demo(cfg)
+    elif cfg.protocol==config.GMC:
+        print ("Using GMC protocol")
+        geigerCommunication=gmc(cfg)
+    elif cfg.protocol==config.NETIO:
+        print ("Using NetIO protocol")
+        geigerCommunication=netio(cfg)
+    else:
+        print ("Unknown protocol configured, can't run")
+        sys.exit(1)
+    
+    # create web server communication object
+    webService=webCommunication(cfg)
+    
+    # main loop is in while loop
+    try:
+        # start measuring thread
+        geigerCommunication.start()
+    
+        # Now send data to web site every 30 seconds
+        while(geigerCommunication.is_running==1):
+            sample=geigerCommunication.getResult()
+    
+            if sample[0]!=-1:
+                # sample is valid, CPM !=-1
+                print ("Average result:\tCPM =",sample[0],"\t",str(sample[1]))
+                print ("Raw sample:", str(sample))
+                try:
+                    webService.sendSample(sample)
+                except Exception as e:
+                    print ("Error communicating server:\r\n\t",type(e), str(e),"\r\n")
+    
+                print ("Waiting 30 seconds")
+                # actually waiting 30x1 seconds, it's has better response when CTRL+C is used, maybe will be changed in future
+                for i in range(0,30):
+                    time.sleep(1)
+            else:
+                print ("No samples in queue, waiting 5 seconds")
+                for i in range(0,5):
+                    time.sleep(1)
+    
+        # well, when we will go to this line it looks like geigerCommunication thread stops running
+        # most likely because of serial port problems...
+    
+    except KeyboardInterrupt as e:
+        print ("\r\nCTRL+C pressed, exiting program\r\n\t", str(e))
+        geigerCommunication.stop()
+    except Exception as e:
+        geigerCommunication.stop()
+        print ("\r\nUnhandled error\r\n\t",str(e))
+    
     geigerCommunication.stop()
-except Exception as e:
-    geigerCommunication.stop()
-    print ("\r\nUnhandled error\r\n\t",str(e))
-
-geigerCommunication.stop()
